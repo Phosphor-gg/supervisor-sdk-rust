@@ -74,25 +74,25 @@ println!("Flagged: {}, Score: {}", result.flagged, result.score);
 let labels = client.get_labels().await?;
 ```
 
-## Partner API
+## Platform API
 
 ```rust
-use supervisor_sdk::{PartnerClient, PartnerModerationRequest, PartnerCheckoutRequest, Tier, BillingCycle};
+use supervisor_sdk::{PlatformClient, PlatformModerationRequest, PlatformCheckoutRequest, Tier, BillingCycle};
 
-let partner = PartnerClient::new("client-id", "client-secret");
+let platform = PlatformClient::new("client-id", "client-secret");
 
 // Provision a user
-let user = partner.provision_user("user@example.com").await?;
+let user = platform.provision_user("user@example.com").await?;
 
 // Moderate on behalf of a user
-let result = partner.moderate(PartnerModerationRequest {
+let result = platform.moderate(PlatformModerationRequest {
     user_email: "user@example.com".into(),
     text: Some("check this".into()),
     ..Default::default()
 }).await?;
 
 // Create checkout
-let checkout = partner.create_checkout(PartnerCheckoutRequest {
+let checkout = platform.create_checkout(PlatformCheckoutRequest {
     user_email: "user@example.com".into(),
     tier: Tier::Standard,
     billing_cycle: BillingCycle::Monthly,
@@ -101,7 +101,7 @@ let checkout = partner.create_checkout(PartnerCheckoutRequest {
 }).await?;
 
 // List linked users
-let users = partner.list_users().await?;
+let users = platform.list_users().await?;
 ```
 
 ## Error Handling

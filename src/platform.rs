@@ -2,10 +2,10 @@ use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION, CONTENT_TYPE};
 use serde::de::DeserializeOwned;
 use std::sync::Arc;
 use supervisor_types::moderate::ModerationResponse;
-use supervisor_types::partner::{
-    ConfirmAuthorizationRequest, ConfirmAuthorizationResponse, PartnerCheckoutRequest,
-    PartnerCheckoutResponse, PartnerModerationRequest, PartnerTokenRequest,
-    PartnerTokenResponse, PartnerUserInfo, ProvisionUserRequest, ProvisionUserResponse,
+use supervisor_types::platform::{
+    ConfirmAuthorizationRequest, ConfirmAuthorizationResponse, PlatformCheckoutRequest,
+    PlatformCheckoutResponse, PlatformModerationRequest, PlatformTokenRequest,
+    PlatformTokenResponse, PlatformUserInfo, ProvisionUserRequest, ProvisionUserResponse,
     StripeConnectStatusResponse,
 };
 use tokio::sync::Mutex;
@@ -19,8 +19,8 @@ struct TokenState {
     expires_at: std::time::Instant,
 }
 
-/// Async client for the Supervisor Partner API with OAuth2 client credentials.
-pub struct PartnerClient {
+/// Async client for the Supervisor Platform API with OAuth2 client credentials.
+pub struct PlatformClient {
     client_id: String,
     client_secret: String,
     http: reqwest::Client,
@@ -28,13 +28,13 @@ pub struct PartnerClient {
     token: Arc<Mutex<Option<TokenState>>>,
 }
 
-impl PartnerClient {
-    /// Create a new partner client.
+impl PlatformClient {
+    /// Create a new platform client.
     pub fn new(client_id: &str, client_secret: &str) -> Self {
         Self::with_base_url(client_id, client_secret, DEFAULT_BASE_URL)
     }
 
-    /// Create a new partner client with a custom base URL.
+    /// Create a new platform client with a custom base URL.
     pub fn with_base_url(client_id: &str, client_secret: &str, base_url: &str) -> Self {
         let mut headers = HeaderMap::new();
         headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
@@ -63,7 +63,7 @@ impl PartnerClient {
             }
         }
 
-        let request = PartnerTokenRequest {
+        let request = PlatformTokenRequest {
             client_id: self.client_id.clone(),
             client_secret: self.client_secret.clone(),
             grant_type: "client_credentials".to_string(),
@@ -71,7 +71,7 @@ impl PartnerClient {
 
         let response = self
             .http
-            .post(format!("{}/api/partner/token", self.base_url))
+            .post(format!("{}/api/platform/token", self.base_url))
             .json(&request)
             .send()
             .await?;
@@ -89,7 +89,7 @@ impl PartnerClient {
             });
         }
 
-        let token_resp: PartnerTokenResponse = response.json().await?;
+        let token_resp: PlatformTokenResponse = response.json().await?;
         let access_token = token_resp.access_token.clone();
 
         *token_guard = Some(TokenState {
@@ -140,38 +140,38 @@ impl PartnerClient {
         let req = ProvisionUserRequest {
             email: email.to_string(),
         };
-        self.request(reqwest::Method::POST, "/api/partner/users/provision", Some(&req))
+        self.request(reqwest::Method::POST, "/api/platform/users/provision", Some(&req))
             .await
     }
 
-    /// List all users linked to this partner.
-    pub async fn list_users(&self) -> Result<Vec<PartnerUserInfo>> {
-        self.request::<Vec<PartnerUserInfo>>(reqwest::Method::GET, "/api/partner/users", None::<&()>.as_ref())
+    /// List all users linked to this platform.
+    pub async fn list_users(&self) -> Result<Vec<PlatformUserInfo>> {
+        self.request::<Vec<PlatformUserInfo>>(reqwest::Method::GET, "/api/platform/users", None::<&()>.as_ref())
             .await
     }
 
     /// Get a specific linked user by ID.
-    pub async fn get_user(&self, user_id: &str) -> Result<PartnerUserInfo> {
+    pub async fn get_user(&self, user_id: &str) -> Result<PlatformUserInfo> {
         self.request(
             reqwest::Method::GET,
-            &format!("/api/partner/users/{}", user_id),
+            &format!("/api/platform/users/{}", user_id),
             None::<&()>.as_ref(),
         )
         .await
     }
 
     /// Moderate content on behalf of a linked user.
-    pub async fn moderate(&self, request: PartnerModerationRequest) -> Result<ModerationResponse> {
-        self.request(reqwest::Method::POST, "/api/partner/moderate", Some(&request))
+    pub async fn moderate(&self, request: PlatformModerationRequest) -> Result<ModerationResponse> {
+        self.request(reqwest::Method::POST, "/api/platform/moderate", Some(&request))
             .await
     }
 
-    /// Create a Stripe checkout session for a partner user.
+    /// Create a Stripe checkout session for a platform user.
     pub async fn create_checkout(
         &self,
-        request: PartnerCheckoutRequest,
-    ) -> Result<PartnerCheckoutResponse> {
-        self.request(reqwest::Method::POST, "/api/partner/checkout", Some(&request))
+        request: PlatformCheckoutRequest,
+    ) -> Result<PlatformCheckoutResponse> {
+        self.request(reqwest::Method::POST, "/api/platform/checkout", Some(&request))
             .await
     }
 
@@ -185,7 +185,7 @@ impl PartnerClient {
         };
         self.request(
             reqwest::Method::POST,
-            "/api/partner/users/confirm-authorization",
+            "/api/platform/users/confirm-authorization",
             Some(&req),
         )
         .await
@@ -193,7 +193,7 @@ impl PartnerClient {
 
     /// Get the Stripe Connect onboarding status.
     pub async fn get_connect_status(&self) -> Result<StripeConnectStatusResponse> {
-        self.request(reqwest::Method::GET, "/api/partner/connect/status", None::<&()>.as_ref())
+        self.request(reqwest::Method::GET, "/api/platform/connect/status", None::<&()>.as_ref())
             .await
     }
 }

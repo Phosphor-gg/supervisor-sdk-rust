@@ -25,22 +25,22 @@
 
 pub mod client;
 pub mod error;
-pub mod partner;
+pub mod platform;
 
 // Re-export the client types
 pub use client::SupervisorClient;
 pub use error::{Result, SupervisorError};
-pub use partner::PartnerClient;
+pub use platform::PlatformClient;
 
 // Re-export types from supervisor-types
 pub use supervisor_types::moderate::{
     BatchModerationRequest, ModerationLabel, ModerationModel, ModerationRequest,
     ModerationResponse, UsernameCheckRequest, UsernameCheckResponse,
 };
-pub use supervisor_types::partner::{
-    ConfirmAuthorizationRequest, ConfirmAuthorizationResponse, PartnerCheckoutRequest,
-    PartnerCheckoutResponse, PartnerModerationRequest, PartnerTokenRequest,
-    PartnerTokenResponse, PartnerUserInfo, ProvisionUserRequest, ProvisionUserResponse,
+pub use supervisor_types::platform::{
+    ConfirmAuthorizationRequest, ConfirmAuthorizationResponse, PlatformCheckoutRequest,
+    PlatformCheckoutResponse, PlatformModerationRequest, PlatformTokenRequest,
+    PlatformTokenResponse, PlatformUserInfo, ProvisionUserRequest, ProvisionUserResponse,
     StripeConnectStatusResponse,
 };
 pub use supervisor_types::pricing::{BillingCycle, Tier};
