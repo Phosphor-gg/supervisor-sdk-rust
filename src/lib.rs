@@ -28,14 +28,14 @@ pub mod error;
 pub mod platform;
 
 // Re-export the client types
-pub use client::SupervisorClient;
+pub use client::{BatchModerationRequest, SupervisorClient};
 pub use error::{Result, SupervisorError};
 pub use platform::PlatformClient;
 
 // Re-export types from supervisor-types
 pub use supervisor_types::moderate::{
-    BatchModerationRequest, ModerationLabel, ModerationModel, ModerationRequest,
-    ModerationResponse, UsernameCheckRequest, UsernameCheckResponse,
+    ModerationLabel, ModerationModel, ModerationRequest, ModerationResponse, UsernameCheckRequest,
+    UsernameCheckResponse,
 };
 pub use supervisor_types::platform::{
     ConfirmAuthorizationRequest, ConfirmAuthorizationResponse, PlatformCheckoutRequest,

@@ -18,6 +18,10 @@ pub enum SupervisorError {
     /// Failed to serialize/deserialize JSON.
     #[error("JSON error: {0}")]
     Json(#[from] serde_json::Error),
+
+    /// Request failed local validation before being sent.
+    #[error("validation error: {0}")]
+    Validation(String),
 }
 
 impl SupervisorError {

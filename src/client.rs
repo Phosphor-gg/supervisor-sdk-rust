@@ -1,13 +1,39 @@
+use std::collections::HashMap;
+
 use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION, CONTENT_TYPE};
 use serde::de::DeserializeOwned;
+use serde::Serialize;
 use supervisor_types::moderate::{
-    BatchModerationRequest, ModerationLabel, ModerationRequest, ModerationResponse,
-    UsernameCheckRequest, UsernameCheckResponse,
+    ModerationModel, ModerationRequest, ModerationResponse, UsernameCheckRequest,
+    UsernameCheckResponse,
 };
 
 use crate::error::{Result, SupervisorError};
 
 const DEFAULT_BASE_URL: &str = "https://api.supervisor.gg";
+
+/// Request body for the `/api/batch` endpoint.
+///
+/// If both `texts` and `images` are non-empty, their lengths must be equal;
+/// this is validated client-side by [`SupervisorClient::moderate_batch`].
+#[derive(Debug, Clone, Default, Serialize)]
+pub struct BatchModerationRequest {
+    /// Texts to moderate.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub texts: Vec<String>,
+    /// Base64-encoded images to moderate.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub images: Vec<String>,
+    /// Moderation model to use.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub model: Option<ModerationModel>,
+    /// Restrict moderation to a subset of labels.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub enabled_labels: Option<Vec<supervisor_types::moderate::ModerationLabel>>,
+    /// Whether to include contextual analysis in the response.
+    #[serde(default)]
+    pub include_context: bool,
+}
 
 /// Async client for the Supervisor content moderation API.
 pub struct SupervisorClient {
@@ -79,11 +105,24 @@ impl SupervisorClient {
             .await
     }
 
-    /// Moderate multiple texts in a single request.
+    /// Moderate multiple texts and/or images in a single request.
+    ///
+    /// If both `texts` and `images` are non-empty, their lengths must match,
+    /// otherwise a [`SupervisorError::Validation`] is returned before sending.
     pub async fn moderate_batch(
         &self,
         request: BatchModerationRequest,
     ) -> Result<Vec<ModerationResponse>> {
+        if !request.texts.is_empty()
+            && !request.images.is_empty()
+            && request.texts.len() != request.images.len()
+        {
+            return Err(SupervisorError::Validation(format!(
+                "texts and images must have equal lengths when both are provided (got {} texts, {} images)",
+                request.texts.len(),
+                request.images.len()
+            )));
+        }
         self.request(reqwest::Method::POST, "/api/batch", Some(&request))
             .await
     }
@@ -97,9 +136,13 @@ impl SupervisorClient {
             .await
     }
 
-    /// Get all available moderation labels.
-    pub async fn get_labels(&self) -> Result<Vec<ModerationLabel>> {
-        self.request::<Vec<ModerationLabel>>(reqwest::Method::GET, "/api/labels", None::<&()>.as_ref())
-            .await
+    /// Get all available moderation labels as a map of label name to description.
+    pub async fn get_labels(&self) -> Result<HashMap<String, String>> {
+        self.request::<HashMap<String, String>>(
+            reqwest::Method::GET,
+            "/api/labels",
+            None::<&()>.as_ref(),
+        )
+        .await
     }
 }
