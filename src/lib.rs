@@ -9,7 +9,7 @@
 //!
 //! #[tokio::main]
 //! async fn main() -> supervisor_sdk::Result<()> {
-//!     let client = SupervisorClient::new("sk-...");
+//!     let client = SupervisorClient::new("sk-...")?;
 //!
 //!     let result = client.moderate(ModerationRequest {
 //!         text: Some("check this text".into()),

@@ -30,28 +30,31 @@ pub struct PlatformClient {
 
 impl PlatformClient {
     /// Create a new platform client.
-    pub fn new(client_id: &str, client_secret: &str) -> Self {
+    ///
+    /// Returns an error if the underlying HTTP client cannot be built.
+    pub fn new(client_id: &str, client_secret: &str) -> Result<Self> {
         Self::with_base_url(client_id, client_secret, DEFAULT_BASE_URL)
     }
 
     /// Create a new platform client with a custom base URL.
-    pub fn with_base_url(client_id: &str, client_secret: &str, base_url: &str) -> Self {
+    ///
+    /// Returns an error if the underlying HTTP client cannot be built.
+    pub fn with_base_url(client_id: &str, client_secret: &str, base_url: &str) -> Result<Self> {
         let mut headers = HeaderMap::new();
         headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
 
         let http = reqwest::Client::builder()
             .default_headers(headers)
             .timeout(std::time::Duration::from_secs(30))
-            .build()
-            .unwrap();
+            .build()?;
 
-        Self {
+        Ok(Self {
             client_id: client_id.to_string(),
             client_secret: client_secret.to_string(),
             http,
             base_url: base_url.trim_end_matches('/').to_string(),
             token: Arc::new(Mutex::new(None)),
-        }
+        })
     }
 
     async fn ensure_token(&self) -> Result<String> {

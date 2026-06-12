@@ -43,29 +43,36 @@ pub struct SupervisorClient {
 
 impl SupervisorClient {
     /// Create a new client with the given API key.
-    pub fn new(api_key: &str) -> Self {
+    ///
+    /// Returns an error if the API key contains characters invalid for an HTTP
+    /// header, or if the underlying HTTP client cannot be built.
+    pub fn new(api_key: &str) -> Result<Self> {
         Self::with_base_url(api_key, DEFAULT_BASE_URL)
     }
 
     /// Create a new client with a custom base URL.
-    pub fn with_base_url(api_key: &str, base_url: &str) -> Self {
+    ///
+    /// Returns an error if the API key contains characters invalid for an HTTP
+    /// header, or if the underlying HTTP client cannot be built.
+    pub fn with_base_url(api_key: &str, base_url: &str) -> Result<Self> {
         let mut headers = HeaderMap::new();
-        headers.insert(
-            AUTHORIZATION,
-            HeaderValue::from_str(&format!("Bearer {}", api_key)).unwrap(),
-        );
+        let auth = HeaderValue::from_str(&format!("Bearer {}", api_key)).map_err(|_| {
+            SupervisorError::Validation(
+                "invalid API key: contains characters not allowed in an HTTP header".to_string(),
+            )
+        })?;
+        headers.insert(AUTHORIZATION, auth);
         headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
 
         let http = reqwest::Client::builder()
             .default_headers(headers)
             .timeout(std::time::Duration::from_secs(30))
-            .build()
-            .unwrap();
+            .build()?;
 
-        Self {
+        Ok(Self {
             http,
             base_url: base_url.trim_end_matches('/').to_string(),
-        }
+        })
     }
 
     async fn request<T: DeserializeOwned>(
