@@ -1,6 +1,6 @@
 [package]
 name = "supervisor-sdk"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 description = "Official Rust SDK for the Supervisor content moderation API"
 license = "MIT"
@@ -9,7 +9,7 @@ keywords = ["moderation", "content-moderation", "ai", "safety"]
 categories = ["api-bindings", "web-programming::http-client"]
 
 [dependencies]
-supervisor-types = { git = "https://github.com/Phosphor-gg/supervisor-types.git", rev = "3616588" }
+supervisor-types = { git = "https://github.com/Phosphor-gg/supervisor-types.git", rev = "1b403653fa330763ebd5c8a479e2f7e18cfa1894" }
 reqwest = { version = "0.12", features = ["json"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"

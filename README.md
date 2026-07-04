@@ -2,13 +2,13 @@
 
 Official Rust SDK for the [Supervisor](https://supervisor.gg) content moderation API.
 
-Re-exports types directly from `supervisor-types` — zero type duplication.
+Re-exports types directly from `supervisor-types`, zero type duplication.
 
 ## Installation
 
 ```toml
 [dependencies]
-supervisor-sdk = { git = "https://github.com/phosphor-tech/supervisor-sdk-rust" }
+supervisor-sdk = { git = "https://github.com/Phosphor-gg/supervisor-sdk-rust" }
 tokio = { version = "1", features = ["full"] }
 ```
 
@@ -19,12 +19,15 @@ use supervisor_sdk::{SupervisorClient, ModerationRequest, ModerationModel};
 
 #[tokio::main]
 async fn main() -> supervisor_sdk::Result<()> {
-    let client = SupervisorClient::new("sk-...");
+    let client = SupervisorClient::new("sk-...")?;
 
     let result = client.moderate(ModerationRequest {
         text: Some("check this text".into()),
+        image: None,
         model: Some(ModerationModel::Sentinel),
-        ..Default::default()
+        enabled_labels: None,
+        include_context: false,
+        include_implicit: false,
     }).await?;
 
     println!("Flagged: {}", result.flagged);
@@ -40,9 +43,11 @@ async fn main() -> supervisor_sdk::Result<()> {
 ```rust
 let result = client.moderate(ModerationRequest {
     text: Some("some text to check".into()),
+    image: None,
     model: Some(ModerationModel::Arbiter),
     enabled_labels: Some(vec![ModerationLabel::H, ModerationLabel::T]),
-    ..Default::default()
+    include_context: false,
+    include_implicit: false,
 }).await?;
 ```
 
@@ -77,9 +82,12 @@ let labels = client.get_labels().await?;
 ## Platform API
 
 ```rust
-use supervisor_sdk::{PlatformClient, PlatformModerationRequest, PlatformCheckoutRequest, Tier, BillingCycle};
+use supervisor_sdk::{
+    PlatformClient, PlatformModerationRequest, PlatformCheckoutRequest,
+    PlatformChangePlanRequest, Tier, BillingCycle,
+};
 
-let platform = PlatformClient::new("client-id", "client-secret");
+let platform = PlatformClient::new("client-id", "client-secret")?;
 
 // Provision a user
 let user = platform.provision_user("user@example.com").await?;
@@ -88,7 +96,11 @@ let user = platform.provision_user("user@example.com").await?;
 let result = platform.moderate(PlatformModerationRequest {
     user_email: "user@example.com".into(),
     text: Some("check this".into()),
-    ..Default::default()
+    image: None,
+    model: None,
+    enabled_labels: None,
+    include_context: false,
+    include_implicit: false,
 }).await?;
 
 // Create checkout
@@ -100,9 +112,33 @@ let checkout = platform.create_checkout(PlatformCheckoutRequest {
     cancel_url: "https://yourapp.com/cancel".into(),
 }).await?;
 
+// Change the plan of an existing subscription
+let change = platform.change_plan(PlatformChangePlanRequest {
+    user_email: "user@example.com".into(),
+    tier: Tier::Premium,
+    billing_cycle: BillingCycle::Annual,
+}).await?;
+println!("Now on {:?} ({:?})", change.tier, change.billing_cycle);
+
 // List linked users
 let users = platform.list_users().await?;
+
+// Get a specific linked user by ID
+let user = platform.get_user("user-id").await?;
+println!("Authorized: {}, Tier: {:?}", user.authorized, user.tier);
+
+// Confirm a user's authorization with the code from the redirect
+let confirmed = platform.confirm_authorization("auth-code").await?;
+println!("Authorized {} ({})", confirmed.email, confirmed.user_id);
+
+// Check Stripe Connect onboarding status
+let status = platform.get_connect_status().await?;
+println!("Onboarding complete: {}", status.onboarding_complete);
 ```
+
+### Checkout and plan changes
+
+`create_checkout` returns a 403 error if the user has not authorized the platform, and a 400 error if the user already has an active subscription (use `change_plan` instead). `change_plan` returns a 403 error if the subscription was not originated by this platform, and a 400 error if the user has no active subscription. Revenue share is set at subscription creation and preserved across plan changes.
 
 ## Error Handling
 

@@ -3,16 +3,16 @@ use serde::de::DeserializeOwned;
 use std::sync::Arc;
 use supervisor_types::moderate::ModerationResponse;
 use supervisor_types::platform::{
-    ConfirmAuthorizationRequest, ConfirmAuthorizationResponse, PlatformCheckoutRequest,
-    PlatformCheckoutResponse, PlatformModerationRequest, PlatformTokenRequest,
-    PlatformTokenResponse, PlatformUserInfo, ProvisionUserRequest, ProvisionUserResponse,
-    StripeConnectStatusResponse,
+    ConfirmAuthorizationRequest, ConfirmAuthorizationResponse, PlatformChangePlanRequest,
+    PlatformChangePlanResponse, PlatformCheckoutRequest, PlatformCheckoutResponse,
+    PlatformModerationRequest, PlatformTokenRequest, PlatformTokenResponse, PlatformUserInfo,
+    ProvisionUserRequest, ProvisionUserResponse, StripeConnectStatusResponse,
 };
 use tokio::sync::Mutex;
 
 use crate::error::{Result, SupervisorError};
 
-const DEFAULT_BASE_URL: &str = "https://api.supervisor.gg";
+const DEFAULT_BASE_URL: &str = "https://supervisor.gg";
 
 struct TokenState {
     access_token: String,
@@ -175,6 +175,15 @@ impl PlatformClient {
         request: PlatformCheckoutRequest,
     ) -> Result<PlatformCheckoutResponse> {
         self.request(reqwest::Method::POST, "/api/platform/checkout", Some(&request))
+            .await
+    }
+
+    /// Change the plan of a platform user's existing subscription.
+    pub async fn change_plan(
+        &self,
+        request: PlatformChangePlanRequest,
+    ) -> Result<PlatformChangePlanResponse> {
+        self.request(reqwest::Method::POST, "/api/platform/change-plan", Some(&request))
             .await
     }
 

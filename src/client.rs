@@ -10,7 +10,7 @@ use supervisor_types::moderate::{
 
 use crate::error::{Result, SupervisorError};
 
-const DEFAULT_BASE_URL: &str = "https://api.supervisor.gg";
+const DEFAULT_BASE_URL: &str = "https://supervisor.gg";
 
 /// Request body for the `/api/batch` endpoint.
 ///

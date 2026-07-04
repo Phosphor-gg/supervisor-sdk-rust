@@ -7,14 +7,16 @@
 //! ```no_run
 //! use supervisor_sdk::{SupervisorClient, ModerationRequest, ModerationModel};
 //!
-//! #[tokio::main]
-//! async fn main() -> supervisor_sdk::Result<()> {
+//! async fn run() -> supervisor_sdk::Result<()> {
 //!     let client = SupervisorClient::new("sk-...")?;
 //!
 //!     let result = client.moderate(ModerationRequest {
 //!         text: Some("check this text".into()),
+//!         image: None,
 //!         model: Some(ModerationModel::Sentinel),
-//!         ..Default::default()
+//!         enabled_labels: None,
+//!         include_context: false,
+//!         include_implicit: false,
 //!     }).await?;
 //!
 //!     println!("Flagged: {}", result.flagged);
@@ -38,9 +40,9 @@ pub use supervisor_types::moderate::{
     UsernameCheckResponse,
 };
 pub use supervisor_types::platform::{
-    ConfirmAuthorizationRequest, ConfirmAuthorizationResponse, PlatformCheckoutRequest,
-    PlatformCheckoutResponse, PlatformModerationRequest, PlatformTokenRequest,
-    PlatformTokenResponse, PlatformUserInfo, ProvisionUserRequest, ProvisionUserResponse,
-    StripeConnectStatusResponse,
+    ConfirmAuthorizationRequest, ConfirmAuthorizationResponse, PlatformChangePlanRequest,
+    PlatformChangePlanResponse, PlatformCheckoutRequest, PlatformCheckoutResponse,
+    PlatformModerationRequest, PlatformTokenRequest, PlatformTokenResponse, PlatformUserInfo,
+    ProvisionUserRequest, ProvisionUserResponse, StripeConnectStatusResponse,
 };
 pub use supervisor_types::pricing::{BillingCycle, Tier};
