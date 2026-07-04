@@ -5,7 +5,8 @@ use supervisor_types::moderate::ModerationResponse;
 use supervisor_types::platform::{
     ConfirmAuthorizationRequest, ConfirmAuthorizationResponse, PlatformChangePlanRequest,
     PlatformChangePlanResponse, PlatformCheckoutRequest, PlatformCheckoutResponse,
-    PlatformModerationRequest, PlatformTokenRequest, PlatformTokenResponse, PlatformUserInfo,
+    PlatformCreditCheckoutRequest, PlatformModerationRequest, PlatformProductsResponse,
+    PlatformTokenRequest, PlatformTokenResponse, PlatformUserCreditsResponse, PlatformUserInfo,
     ProvisionUserRequest, ProvisionUserResponse, StripeConnectStatusResponse,
 };
 use tokio::sync::Mutex;
@@ -204,6 +205,35 @@ impl PlatformClient {
     }
 
     /// Get the Stripe Connect onboarding status.
+    /// List the plans and credit packs this platform can sell.
+    pub async fn get_products(&self) -> Result<PlatformProductsResponse> {
+        self.request(reqwest::Method::GET, "/api/platform/products", None::<&()>.as_ref())
+            .await
+    }
+
+    /// Create a Stripe checkout for a credit pack purchase (revenue share applies).
+    pub async fn create_credit_checkout(
+        &self,
+        request: PlatformCreditCheckoutRequest,
+    ) -> Result<PlatformCheckoutResponse> {
+        self.request(
+            reqwest::Method::POST,
+            "/api/platform/checkout-credits",
+            Some(&request),
+        )
+        .await
+    }
+
+    /// Remaining credits of an authorized linked user.
+    pub async fn get_user_credits(&self, user_id: &str) -> Result<PlatformUserCreditsResponse> {
+        self.request(
+            reqwest::Method::GET,
+            &format!("/api/platform/users/{}/credits", user_id),
+            None::<&()>.as_ref(),
+        )
+        .await
+    }
+
     pub async fn get_connect_status(&self) -> Result<StripeConnectStatusResponse> {
         self.request(reqwest::Method::GET, "/api/platform/connect/status", None::<&()>.as_ref())
             .await

@@ -140,6 +140,36 @@ println!("Onboarding complete: {}", status.onboarding_complete);
 
 `create_checkout` returns a 403 error if the user has not authorized the platform, and a 400 error if the user already has an active subscription (use `change_plan` instead). `change_plan` returns a 403 error if the subscription was not originated by this platform, and a 400 error if the user has no active subscription. Revenue share is set at subscription creation and preserved across plan changes.
 
+### Products and checkout links
+
+Platforms sell Supervisor plans and credit packs from their own site. List the products, render them however you like, and when a user clicks, mint a per-user checkout link and redirect. Revenue share applies to both product types.
+
+```rust
+let products = platform.get_products().await?;
+// products.plans: subscription tiers with prices in cents
+// products.credit_packs: one-time credit packs
+
+// Credit pack checkout (one-time payment)
+let credits = platform
+    .create_credit_checkout(PlatformCreditCheckoutRequest {
+        user_email: "user@example.com".to_string(),
+        price_id: products.credit_packs[0].price_id.clone(),
+        success_url: "https://myapp.com/thanks".to_string(),
+        cancel_url: "https://myapp.com/pricing".to_string(),
+    })
+    .await?;
+// redirect the user to credits.checkout_url
+```
+
+Show an authorized user their remaining credits:
+
+```rust
+let balance = platform.get_user_credits(&user_id).await?;
+// balance.balance is the total usable right now; monthly and extra breakdowns included
+```
+
+Returns 403 if the user has not authorized your platform.
+
 ## Error Handling
 
 ```rust

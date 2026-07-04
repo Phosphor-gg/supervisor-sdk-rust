@@ -42,6 +42,7 @@ pub use supervisor_types::moderate::{
 pub use supervisor_types::platform::{
     ConfirmAuthorizationRequest, ConfirmAuthorizationResponse, PlatformChangePlanRequest,
     PlatformChangePlanResponse, PlatformCheckoutRequest, PlatformCheckoutResponse,
+    PlatformCreditCheckoutRequest, PlatformProductsResponse, PlatformUserCreditsResponse,
     PlatformModerationRequest, PlatformTokenRequest, PlatformTokenResponse, PlatformUserInfo,
     ProvisionUserRequest, ProvisionUserResponse, StripeConnectStatusResponse,
 };
