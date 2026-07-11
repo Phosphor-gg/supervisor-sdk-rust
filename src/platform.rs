@@ -165,7 +165,16 @@ impl PlatformClient {
     }
 
     /// Moderate content on behalf of a linked user.
-    pub async fn moderate(&self, request: PlatformModerationRequest) -> Result<ModerationResponse> {
+    ///
+    /// Any image is preprocessed client-side (downscaled and re-encoded as
+    /// JPEG) before upload; see [`crate::prepare_image`].
+    pub async fn moderate(
+        &self,
+        mut request: PlatformModerationRequest,
+    ) -> Result<ModerationResponse> {
+        if let Some(image) = request.image.as_deref() {
+            request.image = Some(crate::image_prep::prepare_image(image));
+        }
         self.request(reqwest::Method::POST, "/api/platform/moderate", Some(&request))
             .await
     }

@@ -27,11 +27,13 @@
 
 pub mod client;
 pub mod error;
+pub mod image_prep;
 pub mod platform;
 
 // Re-export the client types
 pub use client::{BatchModerationRequest, SupervisorClient};
 pub use error::{Result, SupervisorError};
+pub use image_prep::prepare_image;
 pub use platform::PlatformClient;
 
 // Re-export types from supervisor-types

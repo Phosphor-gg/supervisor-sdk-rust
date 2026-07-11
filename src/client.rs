@@ -107,7 +107,13 @@ impl SupervisorClient {
     }
 
     /// Moderate text or an image for harmful content.
-    pub async fn moderate(&self, request: ModerationRequest) -> Result<ModerationResponse> {
+    ///
+    /// Any image is preprocessed client-side (downscaled and re-encoded as
+    /// JPEG) before upload; see [`crate::prepare_image`].
+    pub async fn moderate(&self, mut request: ModerationRequest) -> Result<ModerationResponse> {
+        if let Some(image) = request.image.as_deref() {
+            request.image = Some(crate::image_prep::prepare_image(image));
+        }
         self.request(reqwest::Method::POST, "/api/moderate", Some(&request))
             .await
     }
@@ -116,9 +122,12 @@ impl SupervisorClient {
     ///
     /// If both `texts` and `images` are non-empty, their lengths must match,
     /// otherwise a [`SupervisorError::Validation`] is returned before sending.
+    ///
+    /// Images are preprocessed client-side (downscaled and re-encoded as
+    /// JPEG) before upload; see [`crate::prepare_image`].
     pub async fn moderate_batch(
         &self,
-        request: BatchModerationRequest,
+        mut request: BatchModerationRequest,
     ) -> Result<Vec<ModerationResponse>> {
         if !request.texts.is_empty()
             && !request.images.is_empty()
@@ -130,6 +139,11 @@ impl SupervisorClient {
                 request.images.len()
             )));
         }
+        request.images = request
+            .images
+            .iter()
+            .map(|image| crate::image_prep::prepare_image(image))
+            .collect();
         self.request(reqwest::Method::POST, "/api/batch", Some(&request))
             .await
     }
