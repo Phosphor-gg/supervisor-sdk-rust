@@ -9,16 +9,18 @@ keywords = ["moderation", "content-moderation", "ai", "safety"]
 categories = ["api-bindings", "web-programming::http-client"]
 
 [dependencies]
-supervisor-types = { git = "https://github.com/Phosphor-gg/supervisor-types.git", rev = "d9c6787" }
+supervisor-types = { git = "https://github.com/Phosphor-gg/supervisor-types.git", rev = "c889e7a" }
 reqwest = { version = "0.12", features = ["json"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 thiserror = "2"
 tokio = { version = "1", features = ["rt"] }
 image = { version = "0.25", optional = true }
-base64 = { version = "0.23", optional = true }
+# Not optional: moderate_video base64-encodes the clip regardless of
+# whether the image-prep feature is on.
+base64 = "0.23"
 
 [features]
 default = ["image-prep"]
 blocking = ["reqwest/blocking"]
-image-prep = ["dep:image", "dep:base64"]
+image-prep = ["dep:image"]

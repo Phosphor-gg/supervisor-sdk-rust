@@ -38,6 +38,7 @@ pub use platform::PlatformClient;
 
 // Re-export types from supervisor-types
 pub use supervisor_types::moderate::{
+    MAX_VIDEO_BYTES, VideoFrameResult, VideoModerationRequest, VideoModerationResponse,
     ModerationLabel, ModerationModel, ModerationRequest, ModerationResponse, UsernameCheckRequest,
     UsernameCheckResponse,
 };

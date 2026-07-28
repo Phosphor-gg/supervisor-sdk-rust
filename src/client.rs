@@ -2,8 +2,10 @@ use std::collections::HashMap;
 
 use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION, CONTENT_TYPE};
 use serde::de::DeserializeOwned;
+use base64::Engine as _;
 use serde::Serialize;
 use supervisor_types::moderate::{
+    MAX_VIDEO_BYTES, ModerationLabel, VideoModerationRequest, VideoModerationResponse,
     ModerationModel, ModerationRequest, ModerationResponse, UsernameCheckRequest,
     UsernameCheckResponse,
 };
@@ -146,6 +148,49 @@ impl SupervisorClient {
             .collect();
         self.request(reqwest::Method::POST, "/api/batch", Some(&request))
             .await
+    }
+
+    /// Moderate a short video.
+    ///
+    /// Sends the clip to the API, which extracts the frames that actually
+    /// differ (scene cuts rather than every frame) and moderates those, so a
+    /// clip costs a handful of frames rather than hundreds.
+    ///
+    /// Requires the video-moderation entitlement on the account.
+    ///
+    /// The size limit is checked here, so an oversized clip fails before it is
+    /// uploaded rather than after.
+    pub async fn moderate_video(&self, video: &[u8]) -> Result<VideoModerationResponse> {
+        self.moderate_video_with(video, None, None).await
+    }
+
+    /// [`Self::moderate_video`] with an explicit model and label set.
+    pub async fn moderate_video_with(
+        &self,
+        video: &[u8],
+        model: Option<ModerationModel>,
+        enabled_labels: Option<Vec<ModerationLabel>>,
+    ) -> Result<VideoModerationResponse> {
+        if video.len() as i64 > MAX_VIDEO_BYTES {
+            return Err(SupervisorError::Validation(format!(
+                "video is {} bytes, limit is {} ({}MB)",
+                video.len(),
+                MAX_VIDEO_BYTES,
+                MAX_VIDEO_BYTES / (1024 * 1024)
+            )));
+        }
+        let request = VideoModerationRequest {
+            video: base64::engine::general_purpose::STANDARD.encode(video),
+            model,
+            enabled_labels,
+            include_implicit: false,
+        };
+        self.request(
+            reqwest::Method::POST,
+            "/api/moderation/user/video",
+            Some(&request),
+        )
+        .await
     }
 
     /// Check a username for policy violations.
