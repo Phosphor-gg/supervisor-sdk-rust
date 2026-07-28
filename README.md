@@ -106,7 +106,7 @@ let result = platform.moderate(PlatformModerationRequest {
 // Create checkout
 let checkout = platform.create_checkout(PlatformCheckoutRequest {
     user_email: "user@example.com".into(),
-    tier: Tier::Standard,
+    tier: Tier::Premium,
     billing_cycle: BillingCycle::Monthly,
     success_url: "https://yourapp.com/success".into(),
     cancel_url: "https://yourapp.com/cancel".into(),
